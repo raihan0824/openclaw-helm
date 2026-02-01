@@ -162,6 +162,46 @@ app-template:
                 timeoutSeconds: 5
                 failureThreshold: 30
 
+        # Chromium sidecar for browser automation
+        # Provides headless Chrome via CDP for web scraping and automation skills
+        chromium:
+          image:
+            repository: zenika/alpine-chrome
+            tag: "124"
+          command:
+            - chromium-browser
+          args:
+            - --headless
+            - --disable-gpu
+            - --no-sandbox
+            - --disable-dev-shm-usage
+            - --remote-debugging-address=0.0.0.0
+            - --remote-debugging-port=9222
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          probes:
+            readiness:
+              enabled: true
+              type: TCP
+              spec:
+                tcpSocket:
+                  port: 9222
+                initialDelaySeconds: 5
+                periodSeconds: 10
+
   configMaps:
     config:
       enabled: true
@@ -177,6 +217,18 @@ app-template:
               // IMPORTANT: trustedProxies uses exact IP matching only
               // CIDR notation is NOT supported - list each proxy IP individually
               "trustedProxies": ["10.0.0.1"]
+            },
+
+            // Browser configuration (Chromium sidecar)
+            "browser": {
+              "enabled": true,
+              "defaultProfile": "default",
+              "profiles": {
+                "default": {
+                  "cdpUrl": "http://localhost:9222",
+                  "color": "#4285F4"
+                }
+              }
             },
 
             // Agent configuration

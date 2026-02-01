@@ -104,6 +104,25 @@ env:
   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-bundle.crt
 ```
 
+## Browser Automation
+
+A Chromium sidecar container is included by default for browser automation and web scraping. It exposes Chrome DevTools Protocol (CDP) on `localhost:9222`, which OpenClaw uses for browser-based skills.
+
+The browser configuration in `openclaw.json`:
+
+```json5
+"browser": {
+  "enabled": true,
+  "defaultProfile": "default",
+  "profiles": {
+    "default": {
+      "cdpUrl": "http://localhost:9222",
+      "color": "#4285F4"
+    }
+  }
+}
+```
+
 ## Development
 
 ### Linting
