@@ -111,12 +111,10 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: |
           version="${{ steps.get-version.outputs.version }}"
-          # Update only ghcr.io/openclaw/openclaw image tags (init-config and main containers)
-          # Preserves other image tags (node:22 for init-skills, chromium:124)
-          yq -i '
-            .app-template.controllers.main.initContainers.init-config.image.tag = "'"$version"'" |
-            .app-template.controllers.main.containers.main.image.tag = "'"$version"'"
-          ' charts/openclaw/values.yaml
+          old_version="${{ steps.current.outputs.app_version }}"
+          # Use sed for surgical replacement - preserves file formatting
+          # Only replaces the exact old version with new version in tag lines
+          sed -i "s/tag: \"${old_version}\"/tag: \"${version}\"/g" charts/openclaw/values.yaml
 
       - name: Install helm-docs
         if: steps.check.outputs.skip != 'true'
