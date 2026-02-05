@@ -139,6 +139,13 @@ kubectl delete pvc -n {{ .Name }} -l app.kubernetes.io/name={{ .Name }}  # optio
 
 All values are nested under `app-template:`. See [values.yaml](values.yaml) for full reference.
 
+<details>
+<summary><b>Values Table</b></summary>
+
+{{ template "chart.valuesSection" . }}
+
+</details>
+
 ### Config Mode
 
 The `configMode` setting controls how Helm-managed config merges with runtime changes:
@@ -176,13 +183,6 @@ This allows:
 - ArgoCD manages deployments, services, etc.
 - Runtime config changes (paired devices, UI settings) persist on PVC
 - Helm values still merge on pod restart
-
-</details>
-
-<details>
-<summary><b>Values Table</b></summary>
-
-{{ template "chart.valuesSection" . }}
 
 </details>
 

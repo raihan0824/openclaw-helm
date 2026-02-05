@@ -5,12 +5,6 @@ on:
     paths:
       - "charts/**"
       - ".github/workflows/docs.yaml"
-  push:
-    branches:
-      - main
-    paths:
-      - "charts/**"
-      - ".github/workflows/docs.yaml"
 
 concurrency:
   group: docs-${{ github.ref }}
@@ -19,13 +13,11 @@ concurrency:
 jobs:
   helm-docs:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.head_ref || github.ref }}
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Install helm-docs
@@ -38,12 +30,10 @@ jobs:
         run: |
           helm-docs --chart-search-root=charts
 
-      - name: Commit changes
+      - name: Check for uncommitted changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add charts/openclaw/README.md
-          if ! git diff --staged --quiet; then
-            git commit -m "docs: regenerate README"
-            git push
+          if ! git diff --quiet charts/openclaw/README.md; then
+            echo "::error::README.md is out of date. Run 'helm-docs --chart-search-root=charts' locally and commit the changes."
+            git diff charts/openclaw/README.md
+            exit 1
           fi
