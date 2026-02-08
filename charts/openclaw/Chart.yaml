@@ -22,12 +22,20 @@ maintainers:
 annotations:
   artifacthub.io/category: ai-machine-learning
   artifacthub.io/changes: |
+    - kind: changed
+      description: Security hardening - readOnlyRootFilesystem on all containers
+    - kind: changed
+      description: Init containers run as non-root (no more CHOWN/DAC_OVERRIDE caps)
     - kind: added
-      description: Network policy support
+      description: Chromium sidecar enable/disable toggle and version management
     - kind: added
-      description: Config merge mode
-    - kind: added
-      description: Live config reload support
+      description: Post-install notes (NOTES.txt)
+    - kind: changed
+      description: Centralized image versions (openclawVersion, chromiumVersion)
+    - kind: changed
+      description: CI bump workflow supports independent chromium version updates
+    - kind: changed
+      description: NetworkPolicy blocks additional reserved ranges (link-local, CGN)
   artifacthub.io/images: |
     - name: openclaw
       image: ghcr.io/openclaw/openclaw:2026.2.6
