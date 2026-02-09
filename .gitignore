@@ -10,3 +10,5 @@ charts/*/Chart.lock
 # OS
 .DS_Store
 Thumbs.db
+
+secrets-bash/

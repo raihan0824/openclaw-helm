@@ -38,9 +38,7 @@ app-template:
         # Uses OpenClaw image for Node.js runtime (required for merge mode).
         init-config:
           image:
-            # @schema type:string;default:ghcr.io/openclaw/openclaw
-            repository: ghcr.io/openclaw/openclaw
-            # @schema type:string
+            repository: dekaregistry.cloudeka.id/cloudeka-system/openclaw
             tag: "{{ .Values.openclawVersion }}"
           # -- Init-config startup script
           # @default -- See values.yaml
@@ -126,9 +124,7 @@ app-template:
         # Skills are installed from https://clawhub.com
         init-skills:
           image:
-            # @schema type:string;default:ghcr.io/openclaw/openclaw
-            repository: ghcr.io/openclaw/openclaw
-            # @schema type:string
+            repository: dekaregistry.cloudeka.id/cloudeka-system/openclaw
             tag: "{{ .Values.openclawVersion }}"
           # -- Init-skills startup script
           # @default -- See values.yaml
@@ -190,13 +186,12 @@ app-template:
           image:
             # @schema type:string;default:ghcr.io/openclaw/openclaw
             # -- Container image repository
-            repository: ghcr.io/openclaw/openclaw
-            # @schema type:string
+            repository: dekaregistry.cloudeka.id/cloudeka-system/openclaw
             # -- Container image tag
             tag: "{{ .Values.openclawVersion }}"
             # @schema type:string;enum:[Always, IfNotPresent, Never];default:IfNotPresent
             # -- Image pull policy
-            pullPolicy: IfNotPresent
+            pullPolicy: Always
           command:
             - node
             - dist/index.js
@@ -208,14 +203,14 @@ app-template:
             - "18789"
           # Reference a secret containing environment variables (e.g., API keys)
           # Create this secret manually or via external-secrets/vault-operator
-          envFrom: []
+          envFrom:
           # Example:
-          # - secretRef:
-          #     name: openclaw-env-secret
-          env: {}
+          - secretRef:
+              name: openclaw-env-secret
+          # env: {}
           # Example: Add runtime dependency paths for skills
-          # env:
-          #   PATH: /home/node/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          env:
+            PATH: /opt/kubectl:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
           #   # For internal CA trust (Python requests library)
           #   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-bundle.crt
           securityContext:
@@ -542,6 +537,17 @@ app-template:
         main:
           init-config:
             - path: /config
+              readOnly: true
+              
+    kubeconfig:
+      enabled: true
+      type: secret
+      name: openclaw-kubeconfig
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.kube/config
+              subPath: config
               readOnly: true
 
     # Entire .openclaw directory as PVC
