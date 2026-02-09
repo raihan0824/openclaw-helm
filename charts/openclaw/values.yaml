@@ -6,23 +6,30 @@
 # - Do NOT increase replica count
 #
 app-template:
+  # @schema type:string;required:true
   # -- OpenClaw image version (used by all OpenClaw containers)
   openclawVersion: "2026.2.6"
+  # @schema type:string
   # -- Chromium sidecar image version
   chromiumVersion: "124"
+  # @schema type:string;enum:[merge, overwrite];default:merge
   # -- Config mode: `merge` preserves runtime changes, `overwrite` for strict GitOps
   configMode: merge
 
   defaultPodOptions:
     # -- Pod security context
     securityContext:
+      # @schema type:integer;default:1000
       fsGroup: 1000
+      # @schema type:string;enum:[Always, OnRootMismatch];default:OnRootMismatch
       fsGroupChangePolicy: OnRootMismatch
 
   controllers:
     main:
+      # @schema type:integer;minimum:1;maximum:1;default:1
       # -- Number of replicas (must be 1, OpenClaw doesn't support horizontal scaling)
       replicas: 1
+      # @schema type:string;enum:[Recreate, RollingUpdate];default:Recreate
       # -- Deployment strategy
       strategy: Recreate
 
@@ -31,7 +38,9 @@ app-template:
         # Uses OpenClaw image for Node.js runtime (required for merge mode).
         init-config:
           image:
+            # @schema type:string;default:ghcr.io/openclaw/openclaw
             repository: ghcr.io/openclaw/openclaw
+            # @schema type:string
             tag: "{{ .Values.openclawVersion }}"
           # -- Init-config startup script
           # @default -- See values.yaml
@@ -117,7 +126,9 @@ app-template:
         # Skills are installed from https://clawhub.com
         init-skills:
           image:
+            # @schema type:string;default:ghcr.io/openclaw/openclaw
             repository: ghcr.io/openclaw/openclaw
+            # @schema type:string
             tag: "{{ .Values.openclawVersion }}"
           # -- Init-skills startup script
           # @default -- See values.yaml
@@ -177,10 +188,13 @@ app-template:
         # -- Main OpenClaw container
         main:
           image:
+            # @schema type:string;default:ghcr.io/openclaw/openclaw
             # -- Container image repository
             repository: ghcr.io/openclaw/openclaw
+            # @schema type:string
             # -- Container image tag
             tag: "{{ .Values.openclawVersion }}"
+            # @schema type:string;enum:[Always, IfNotPresent, Never];default:IfNotPresent
             # -- Image pull policy
             pullPolicy: IfNotPresent
           command:
@@ -216,50 +230,78 @@ app-template:
           # -- Resource requests and limits
           resources:
             requests:
+              # @schema type:string;default:200m
               cpu: 200m
+              # @schema type:string;default:512Mi
               memory: 512Mi
             limits:
+              # @schema type:string;default:2000m
               cpu: 2000m
+              # @schema type:string;default:2Gi
               memory: 2Gi
           probes:
             liveness:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:string;default:TCP
               type: TCP
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:18789
                   port: 18789
+                # @schema type:integer;default:30
                 initialDelaySeconds: 30
+                # @schema type:integer;default:30
                 periodSeconds: 30
+                # @schema type:integer;default:5
                 timeoutSeconds: 5
+                # @schema type:integer;default:3
                 failureThreshold: 3
             readiness:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:string;default:TCP
               type: TCP
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:18789
                   port: 18789
+                # @schema type:integer;default:10
                 initialDelaySeconds: 10
+                # @schema type:integer;default:10
                 periodSeconds: 10
+                # @schema type:integer;default:5
                 timeoutSeconds: 5
+                # @schema type:integer;default:3
                 failureThreshold: 3
             startup:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:string;default:TCP
               type: TCP
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:18789
                   port: 18789
+                # @schema type:integer;default:5
                 initialDelaySeconds: 5
+                # @schema type:integer;default:5
                 periodSeconds: 5
+                # @schema type:integer;default:5
                 timeoutSeconds: 5
+                # @schema type:integer;default:30
                 failureThreshold: 30
 
         # -- Chromium sidecar for browser automation (CDP on port 9222)
         chromium:
+          # @schema type:boolean;default:true
           # -- Enable/disable the Chromium browser sidecar
           enabled: true
           image:
+            # @schema type:string;default:zenika/alpine-chrome
             # -- Chromium image repository
             repository: zenika/alpine-chrome
+            # @schema type:string
             # -- Chromium image tag
             tag: "{{ .Values.chromiumVersion }}"
           command:
@@ -286,47 +328,72 @@ app-template:
                 - ALL
           resources:
             requests:
+              # @schema type:string;default:100m
               cpu: 100m
+              # @schema type:string;default:256Mi
               memory: 256Mi
             limits:
+              # @schema type:string;default:1000m
               cpu: 1000m
+              # @schema type:string;default:1Gi
               memory: 1Gi
           probes:
             liveness:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:boolean;default:true
               custom: true
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:9222
                   port: 9222
+                # @schema type:integer;default:10
                 initialDelaySeconds: 10
+                # @schema type:integer;default:30
                 periodSeconds: 30
+                # @schema type:integer;default:5
                 timeoutSeconds: 5
+                # @schema type:integer;default:6
                 failureThreshold: 6
             readiness:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:boolean;default:true
               custom: true
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:9222
                   port: 9222
+                # @schema type:integer;default:5
                 initialDelaySeconds: 5
+                # @schema type:integer;default:10
                 periodSeconds: 10
             startup:
+              # @schema type:boolean;default:true
               enabled: true
+              # @schema type:boolean;default:true
               custom: true
               spec:
                 tcpSocket:
+                  # @schema type:integer;default:9222
                   port: 9222
+                # @schema type:integer;default:5
                 initialDelaySeconds: 5
+                # @schema type:integer;default:5
                 periodSeconds: 5
+                # @schema type:integer;default:5
                 timeoutSeconds: 5
+                # @schema type:integer;default:12
                 failureThreshold: 12
 
   configMaps:
     config:
+      # @schema type:boolean;default:true
       enabled: true
       data:
         # OpenClaw configuration - JSON5 format
         # Sensitive values use ${ENV_VAR} substitution from environment secret
+        # @schema type:string
         openclaw.json: |
           {
             // Gateway configuration
@@ -426,16 +493,21 @@ app-template:
   service:
     main:
       controller: main
-      # IPv4-only (see trustedProxies note in gateway config)
+      # @schema type:string;enum:[SingleStack, PreferDualStack, RequireDualStack];default:SingleStack
+      # -- IPv4-only (see trustedProxies note in gateway config)
       ipFamilyPolicy: SingleStack
       ipFamilies:
         - IPv4
       ports:
         http:
+          # @schema type:integer;default:18789
+          # -- Gateway service port
           port: 18789
 
   ingress:
     main:
+      # @schema type:boolean;default:false
+      # -- Enable ingress resource creation
       enabled: false
       # Uncomment and configure for your environment
       # className: nginx
@@ -460,8 +532,11 @@ app-template:
   persistence:
     # ConfigMap for init container to copy from
     config:
+      # @schema type:boolean;default:true
       enabled: true
+      # @schema type:string;default:configMap
       type: configMap
+      # @schema type:string;default:config
       identifier: config
       advancedMounts:
         main:
@@ -471,9 +546,15 @@ app-template:
 
     # Entire .openclaw directory as PVC
     data:
+      # @schema type:boolean;default:true
       enabled: true
+      # @schema type:string;default:persistentVolumeClaim
       type: persistentVolumeClaim
+      # @schema type:string;enum:[ReadWriteOnce, ReadWriteMany, ReadOnlyMany];default:ReadWriteOnce
+      # -- PVC access mode
       accessMode: ReadWriteOnce
+      # @schema type:string;default:5Gi
+      # -- PVC storage size
       size: 5Gi
       advancedMounts:
         main:
@@ -486,7 +567,9 @@ app-template:
 
     # Writable /tmp for containers with readOnlyRootFilesystem
     tmp:
+      # @schema type:boolean;default:true
       enabled: true
+      # @schema type:string;default:emptyDir
       type: emptyDir
       advancedMounts:
         main:
@@ -523,7 +606,10 @@ app-template:
   # explicitly allow required traffic via ingress/egress rules.
   networkpolicies:
     main:
+      # @schema type:boolean;default:false
+      # -- Enable network policy (default deny-all with explicit allow rules)
       enabled: false
+      # @schema type:string;default:main
       controller: main
       policyTypes:
         - Ingress
