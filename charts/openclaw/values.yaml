@@ -143,11 +143,21 @@ app-template:
               # Install them here so they persist across pod restarts.
               #
               # Example: Install uv (Python package manager) for Python skills
-              # mkdir -p /home/node/.openclaw/bin
-              # if [ ! -f /home/node/.openclaw/bin/uv ]; then
-              #   log "Installing uv..."
-              #   curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/home/node/.openclaw/bin sh
-              # fi
+              mkdir -p /home/node/.openclaw/bin
+              if [ ! -f /home/node/.openclaw/bin/uv ]; then
+                log "Installing uv..."
+                curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/home/node/.openclaw/bin sh
+              fi
+
+              # Install mcporter to PVC-backed path
+              mkdir -p /home/node/.openclaw/node_modules/.bin
+              if [ ! -f /home/node/.openclaw/node_modules/.bin/mcporter ]; then
+                log "Installing mcporter..."
+                cd /home/node/.openclaw && npm install mcporter
+              fi
+
+              # Install pg 
+              cd /home/node/.openclaw && npm install pg
 
               # ============================================================
               # Skill Installation
@@ -210,7 +220,8 @@ app-template:
           # env: {}
           # Example: Add runtime dependency paths for skills
           env:
-            PATH: /opt/kubectl:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            PATH: /home/node/.openclaw/node_modules/.bin:/opt/kubectl:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
           #   # For internal CA trust (Python requests library)
           #   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-bundle.crt
           securityContext:
@@ -419,8 +430,8 @@ app-template:
               "defaults": {
                 "workspace": "/home/node/.openclaw/workspace",
                 "model": {
-                  // Uses ANTHROPIC_API_KEY from environment
-                  "primary": "anthropic/claude-opus-4-6"
+                  // Uses DEKALLM_API_KEY from environment
+                  "primary": "dekallm/zai/glm-4.7-fp8"
                 },
                 "userTimezone": "UTC",
                 "timeoutSeconds": 600,
@@ -436,6 +447,19 @@ app-template:
                   }
                 }
               ]
+            },
+
+            // Model providers
+            "models": {
+              "mode": "merge",
+              "providers": {
+                "dekallm": {
+                  "baseUrl": "https://dekallm.cloudeka.ai/v1",
+                  "apiKey": "${DEKALLM_API_KEY}",
+                  "api": "openai-completions",
+                  "models": [{ "id": "zai/glm-4.7-fp8", "name": "GLM 4.7" }]
+                }
+              }
             },
 
             // Session management
@@ -467,22 +491,52 @@ app-template:
                   "enabled": true
                 }
               }
-            }
+            },
 
-            // Channel configuration can be added here:
-            // "channels": {
-            //   "telegram": {
-            //     "botToken": "${TELEGRAM_BOT_TOKEN}",
-            //     "enabled": true
-            //   },
-            //   "discord": {
-            //     "token": "${DISCORD_BOT_TOKEN}"
-            //   },
-            //   "slack": {
-            //     "botToken": "${SLACK_BOT_TOKEN}",
-            //     "appToken": "${SLACK_APP_TOKEN}"
-            //   }
-            // }
+            // Channel configuration
+            "channels": {
+              "telegram": {
+                "botToken": "${TELEGRAM_BOT_TOKEN}",
+                "enabled": true
+              },
+              "slack": {
+                "botToken": "${SLACK_BOT_TOKEN}",
+                "appToken": "${SLACK_APP_TOKEN}",
+                "enabled": true,
+                "replyToMode": "all",
+                "channels": {"C0AEWJDTED6": { "allow": true, "requireMention": false }}
+              }
+            },
+
+            // Hooks configuration
+              "hooks": {
+                "enabled": true,
+                "token": "${OPENCLAW_HOOKS_TOKEN}",
+                "transformsDir": "/home/node/.openclaw/hooks",
+                "mappings": [
+                  {
+                    "id": "aira",
+                    "match": { "path": "aira" },
+                    "action": "agent",
+                    "transform": { "module": "./transforms/aira-tracker.mjs", "export": "transformAira" }
+                  },
+                  {
+                    "id": "aira-feedback",
+                    "match": { "path": "aira-feedback" },
+                    "action": "wake",
+                    "transform": { "module": "./transforms/aira-feedback.mjs", "export": "transformFeedback" }
+                  },
+                  {
+                    "id": "aira-close",
+                    "match": { "path": "aira-close" },
+                    "action": "wake",
+                    "transform": { "module": "./transforms/aira-close.mjs", "export": "transformClose" }
+                  }
+                ],
+                "internal": {
+                  "enabled": true
+                }
+              }
           }
 
   service:
@@ -549,6 +603,56 @@ app-template:
             - path: /home/node/.kube/config
               subPath: config
               readOnly: true
+
+
+    aira-db-skill:
+      enabled: true
+      type: configMap
+      name: aira-db-skill
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.openclaw/workspace/skills/aira-db/SKILL.md
+              subPath: SKILL.md
+              readOnly: true
+
+    aira-db-mcporter-config:
+      enabled: true
+      type: configMap
+      name: aira-db-mcporter-config
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.openclaw/workspace/config/mcporter.json
+              subPath: mcporter.json
+              readOnly: true
+
+    aira-feedback-transform:
+      enabled: true
+      type: configMap
+      name: aira-feedback-transform
+      globalMounts:
+        - path: /home/node/.openclaw/hooks/transforms/aira-feedback.mjs
+          subPath: aira-feedback.mjs
+          readOnly: true
+
+    aira-tracker-transform:
+      enabled: true
+      type: configMap
+      name: aira-tracker-transform
+      globalMounts:
+        - path: /home/node/.openclaw/hooks/transforms/aira-tracker.mjs
+          subPath: aira-tracker.mjs
+          readOnly: true
+
+    aira-close-transform:
+      enabled: true
+      type: configMap
+      name: aira-close-transform
+      globalMounts:
+        - path: /home/node/.openclaw/hooks/transforms/aira-close.mjs
+          subPath: aira-close.mjs
+          readOnly: true
 
     # Entire .openclaw directory as PVC
     data:
