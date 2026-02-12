@@ -511,31 +511,7 @@ app-template:
             // Hooks configuration
               "hooks": {
                 "enabled": true,
-                "token": "${OPENCLAW_HOOKS_TOKEN}",
-                "transformsDir": "/home/node/.openclaw/hooks",
-                "mappings": [
-                  {
-                    "id": "aira",
-                    "match": { "path": "aira" },
-                    "action": "agent",
-                    "transform": { "module": "./transforms/aira-tracker.mjs", "export": "transformAira" }
-                  },
-                  {
-                    "id": "aira-feedback",
-                    "match": { "path": "aira-feedback" },
-                    "action": "wake",
-                    "transform": { "module": "./transforms/aira-feedback.mjs", "export": "transformFeedback" }
-                  },
-                  {
-                    "id": "aira-close",
-                    "match": { "path": "aira-close" },
-                    "action": "wake",
-                    "transform": { "module": "./transforms/aira-close.mjs", "export": "transformClose" }
-                  }
-                ],
-                "internal": {
-                  "enabled": true
-                }
+                "token": "${OPENCLAW_HOOKS_TOKEN}"
               }
           }
 
@@ -626,33 +602,6 @@ app-template:
             - path: /home/node/.openclaw/workspace/config/mcporter.json
               subPath: mcporter.json
               readOnly: true
-
-    aira-feedback-transform:
-      enabled: true
-      type: configMap
-      name: aira-feedback-transform
-      globalMounts:
-        - path: /home/node/.openclaw/hooks/transforms/aira-feedback.mjs
-          subPath: aira-feedback.mjs
-          readOnly: true
-
-    aira-tracker-transform:
-      enabled: true
-      type: configMap
-      name: aira-tracker-transform
-      globalMounts:
-        - path: /home/node/.openclaw/hooks/transforms/aira-tracker.mjs
-          subPath: aira-tracker.mjs
-          readOnly: true
-
-    aira-close-transform:
-      enabled: true
-      type: configMap
-      name: aira-close-transform
-      globalMounts:
-        - path: /home/node/.openclaw/hooks/transforms/aira-close.mjs
-          subPath: aira-close.mjs
-          readOnly: true
 
     # Entire .openclaw directory as PVC
     data:
