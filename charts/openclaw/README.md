@@ -6,7 +6,7 @@
 
 Helm chart for deploying OpenClaw on Cloudeka Kubernetes infrastructure — an AI assistant that connects to messaging platforms and executes tasks autonomously.
 
-> **[Documentation](../../docs/)** — Full installation guide, multi-agent setup, skills, and troubleshooting
+> **[Documentation](./docs/)** — Full installation guide, multi-agent setup, skills, and troubleshooting
 
 ---
 
@@ -54,12 +54,12 @@ Open http://localhost:18789 and enter your gateway token.
 
 | Guide | Description |
 |-------|-------------|
-| [00. Prerequisites](../../docs/00-prerequisites.md) | Required tools, Cloudeka access, kubeconfig |
-| [01. Installation](../../docs/01-installation.md) | Deployment steps and initial setup |
-| [02. Configuration](../../docs/02-configuration.md) | Channels, models, sessions, and settings |
-| [03. Skills](../../docs/03-skills.md) | Adding single-file and folder-based skills |
-| [04. Multi-Agent](../../docs/04-multi-agent.md) | Running multiple isolated agents |
-| [05. Troubleshooting](../../docs/05-troubleshooting.md) | Common issues and solutions |
+| [00. Prerequisites](./docs/00-prerequisites.md) | Required tools, Cloudeka access, kubeconfig |
+| [01. Installation](./docs/01-installation.md) | Deployment steps and initial setup |
+| [02. Configuration](./docs/02-configuration.md) | Channels, models, sessions, and settings |
+| [03. Skills](./docs/03-skills.md) | Adding single-file and folder-based skills |
+| [04. Multi-Agent](./docs/04-multi-agent.md) | Running multiple isolated agents |
+| [05. Troubleshooting](./docs/05-troubleshooting.md) | Common issues and solutions |
 
 ---
 
@@ -102,7 +102,7 @@ OpenClaw runs as a single-instance deployment (cannot scale horizontally):
 
 ## Configuration
 
-All configuration is done via `values.yaml`. See [values.yaml](./values.yaml) for full reference.
+All configuration is done via `values.yaml`. See [values.yaml](./charts/openclaw/values.yaml) for full reference.
 
 Key settings:
 - **Channels**: Slack, Telegram, Discord (via env variables)
@@ -110,7 +110,7 @@ Key settings:
 - **Persistence**: 5Gi PVC for workspace, sessions, skills
 - **Browser**: Headless Chromium sidecar (optional)
 
-For detailed configuration guide, see [02. Configuration](../../docs/02-configuration.md).
+For detailed configuration guide, see [02. Configuration](./docs/02-configuration.md).
 
 ---
 
@@ -127,7 +127,7 @@ kubectl logs -n openclaw deployment/openclaw
 kubectl port-forward -n openclaw svc/openclaw 18789:18789
 ```
 
-For more troubleshooting help, see [05. Troubleshooting](../../docs/05-troubleshooting.md).
+For more troubleshooting help, see [05. Troubleshooting](./docs/05-troubleshooting.md).
 
 ---
 
