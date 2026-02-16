@@ -233,6 +233,8 @@ Add `ANTHROPIC_API_KEY` to your secrets.
 
 ## Channel Configuration
 
+> **Important:** Only enable channels you have configured. If a channel is enabled but its environment variable (token) is not set, OpenClaw will fail to start. Comment out any channels you are not using.
+
 ### Telegram
 
 ```json
@@ -246,7 +248,24 @@ Add `ANTHROPIC_API_KEY` to your secrets.
 }
 ```
 
-Create a Telegram bot via [@BotFather](https://t.me/botfather) and add the token to secrets.
+**Telegram Pairing Required:**
+
+After enabling Telegram, you must pair the bot with OpenClaw:
+
+1. Start a conversation with your Telegram bot
+2. Send `/start` or any message to get a pairing code
+3. Approve the pairing from within the pod:
+
+```bash
+kubectl exec -n openclaw deployment/openclaw -c main -- \
+  node dist/index.js pairing approve telegram <PAIRING_CODE>
+```
+
+**Setup Steps:**
+1. Create a Telegram bot via [@BotFather](https://t.me/botfather)
+2. Add `TELEGRAM_BOT_TOKEN` to your secrets
+3. Deploy OpenClaw
+4. Get pairing code from Telegram and approve it
 
 ### Slack
 
@@ -269,12 +288,14 @@ Create a Telegram bot via [@BotFather](https://t.me/botfather) and add the token
 }
 ```
 
+**Only enable Slack if you have configured the tokens. Comment out the entire `slack` block if using Telegram only.**
+
 #### Setting up Slack
 
 1. Create a Slack App: https://api.slack.com/apps
 2. Enable **Socket Mode**
 3. Add OAuth Scopes: `chat:write`, `channels:history`, `groups:history`, `im:history`, `mpim:history`
-4. Add Bot Token and App Token to secrets
+4. Add `SLACK_BOT_TOKEN` and `SLACK_APP_TOKEN` to secrets
 5. Install app to your workspace
 
 ### Discord
@@ -295,8 +316,28 @@ Create a Telegram bot via [@BotFather](https://t.me/botfather) and add the token
 1. Create application: https://discord.com/developers/applications
 2. Create bot user
 3. Enable Privileged Intents: **Server Members Intent**, **Message Content Intent**
-4. Add bot token to secrets
+4. Add `DISCORD_BOT_TOKEN` to secrets
 5. Invite bot with `applications.commands` and `bot` scopes
+
+### Example: Using Only Telegram
+
+If you only want Telegram (not Slack), comment out the Slack section:
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "enabled": true
+    }
+    // "slack": {
+    //   "botToken": "${SLACK_BOT_TOKEN}",
+    //   "appToken": "${SLACK_APP_TOKEN}",
+    //   "enabled": true
+    // }
+  }
+}
+```
 
 ## Logging Configuration
 
@@ -407,6 +448,78 @@ app-template:
             CUSTOM_VAR: "value"
             NODE_ENV: "production"
 ```
+
+## Optional Persistence (Comment Out When Not Used)
+
+Some persistence entries in `values.yaml` are commented out by default. **Leave them commented unless you have created the required secrets/configmaps**, otherwise OpenClaw will fail to start.
+
+### Kubeconfig (for kubectl access)
+
+```yaml
+# Uncomment ONLY after creating the secret:
+# kubectl create secret generic openclaw-kubeconfig \
+#   --from-file=config=/path/to/kubeconfig \
+#   -n openclaw
+
+app-template:
+  persistence:
+    kubeconfig:
+      enabled: true
+      type: secret
+      name: openclaw-kubeconfig
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.kube/config
+              subPath: config
+              readOnly: true
+```
+
+### Custom Skills
+
+```yaml
+# Uncomment ONLY after creating the skill ConfigMap:
+# kubectl create configmap my-skill \
+#   --from-file=SKILL.md=./skills/my-skill/SKILL.md \
+#   -n openclaw
+
+app-template:
+  persistence:
+    my-skill:
+      enabled: true
+      type: configMap
+      name: my-skill
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.openclaw/workspace/skills/my-skill/SKILL.md
+              subPath: SKILL.md
+              readOnly: true
+```
+
+### MCP Server Config
+
+```yaml
+# Uncomment ONLY after creating the MCP config:
+# kubectl create configmap my-mcporter-config \
+#   --from-file=mcporter.json=./mcporter.json \
+#   -n openclaw
+
+app-template:
+  persistence:
+    my-mcporter-config:
+      enabled: true
+      type: configMap
+      name: my-mcporter-config
+      advancedMounts:
+        main:
+          main:
+            - path: /home/node/.openclaw/workspace/config/mcporter.json
+              subPath: mcporter.json
+              readOnly: true
+```
+
+**Important:** Always create the secret/ConfigMap before uncommenting the persistence entry, or the pod will fail with "mount failed" errors.
 
 ## Next Steps
 

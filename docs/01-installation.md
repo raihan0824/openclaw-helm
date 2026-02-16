@@ -29,14 +29,16 @@ OpenClaw is an AI assistant gateway that connects to messaging platforms (Slack,
 
 You'll need to prepare these secrets:
 
-| Secret Key | Description | Example |
-|------------|-------------|---------|
-| `DEKALLM_API_KEY` | Cloudeka LLM API key | `sk-8tGef...` |
-| `OPENCLAW_GATEWAY_TOKEN` | Gateway auth token | Random hex string |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token | `8439241466:...` |
-| `SLACK_BOT_TOKEN` | Slack bot token | `xoxb-...` |
-| `SLACK_APP_TOKEN` | Slack app token | `xapp-1-...` |
-| `OPENCLAW_HOOKS_TOKEN` | Webhook auth token | Random hex string |
+| Secret Key | Description | Required |
+|------------|-------------|----------|
+| `DEKALLM_API_KEY` | Cloudeka LLM API key | **Yes** |
+| `OPENCLAW_GATEWAY_TOKEN` | Gateway auth token | **Yes** |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | If using Telegram |
+| `SLACK_BOT_TOKEN` | Slack bot token | If using Slack |
+| `SLACK_APP_TOKEN` | Slack app token | If using Slack |
+| `OPENCLAW_HOOKS_TOKEN` | Webhook auth token | Optional |
+
+> **Important:** Only add secrets for channels you are using. If a channel is enabled in config but its token is not set, OpenClaw will fail to start. Comment out unused channels in `openclaw.json`.
 
 ### Cloudeka-Specific Configuration
 
@@ -173,6 +175,29 @@ kubectl exec -n openclaw deployment/openclaw -- node dist/index.js devices list
 # Approve (replace <REQUEST_ID>)
 kubectl exec -n openclaw deployment/openclaw -- node dist/index.js devices approve <REQUEST_ID>
 ```
+
+### Step 9: Pair Telegram (If Using Telegram)
+
+**Important:** If you enabled Telegram channel, you must complete pairing after deployment:
+
+1. Start a chat with your Telegram bot in the Telegram app
+2. Send `/start` or any message to the bot
+3. The bot will reply with a pairing code (e.g., `ABCD1234`)
+
+Approve the pairing from within the pod:
+
+```bash
+kubectl exec -n openclaw deployment/openclaw -c main -- \
+  node dist/index.js pairing approve telegram <PAIRING_CODE>
+```
+
+Example:
+```bash
+kubectl exec -n openclaw deployment/openclaw -c main -- \
+  node dist/index.js pairing approve telegram PML9NL9U
+```
+
+After pairing, the bot will respond to your messages in Telegram.
 
 ## Upgrading
 

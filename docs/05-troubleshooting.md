@@ -39,7 +39,7 @@ openclaw-xxx               0/3     CrashLoopBackOff   5          5m
 
 **Possible Causes:**
 
-1. **Missing environment variables**
+1. **Missing required environment variables**
    ```bash
    # Check if secret exists
    kubectl get secret openclaw-env-secret -n openclaw
@@ -55,7 +55,43 @@ openclaw-xxx               0/3     CrashLoopBackOff   5          5m
      --from-literal=OPENCLAW_GATEWAY_TOKEN=yyy
    ```
 
-2. **Invalid openclaw.json syntax**
+2. **Channel enabled but token not set**
+
+   If you enabled a channel (Slack, Telegram, Discord) in `openclaw.json` but didn't set the corresponding environment variable, OpenClaw will fail to start.
+
+   **Error example:** `SLACK_BOT_TOKEN is not set`
+
+   Solution: Either add the token to your secret OR comment out the channel in openclaw.json:
+   ```json
+   {
+     "channels": {
+       "telegram": {
+         "botToken": "${TELEGRAM_BOT_TOKEN}",
+         "enabled": true
+       }
+       // "slack": {
+       //   "botToken": "${SLACK_BOT_TOKEN}",
+       //   "appToken": "${SLACK_APP_TOKEN}",
+       //   "enabled": true
+       // }
+     }
+   }
+   ```
+
+3. **Persistence mount references non-existent secret/ConfigMap**
+
+   If you uncommented persistence entries (kubeconfig, skills, MCP config) without creating the corresponding secret/ConfigMap, the pod will fail.
+
+   **Error example:** `Error: couldn't find secret openclaw-kubeconfig`
+
+   Solution: Create the secret first, or keep the persistence commented out:
+   ```bash
+   # Create the secret BEFORE uncommenting in values.yaml
+   kubectl create secret generic openclaw-kubeconfig \
+     --from-file=config=/path/to/kubeconfig -n openclaw
+   ```
+
+4. **Invalid openclaw.json syntax**
    ```bash
    # Check init-config logs
    kubectl logs -n openclaw deployment/openclaw -c init-config
@@ -65,7 +101,7 @@ openclaw-xxx               0/3     CrashLoopBackOff   5          5m
 
    Solution: Fix JSON syntax in values.yaml
 
-3. **Image pull errors**
+5. **Image pull errors**
    ```bash
    # Check if image exists
    kubectl describe pod -n openclaw <pod-name>
@@ -237,6 +273,21 @@ kubectl logs -n openclaw deployment/openclaw -c main | grep -i telegram
 **Common issues:**
 1. **Bot token invalid** — Regenerate via @BotFather
 2. **Webhook conflicts** — Ensure no other webhook is set
+3. **Not paired** — Complete Telegram pairing after installation
+
+**Telegram Pairing:**
+
+After enabling Telegram, you must pair the bot:
+
+```bash
+# 1. Start chat with your bot in Telegram app
+# 2. Send /start to get pairing code
+# 3. Approve the pairing (replace <PAIRING_CODE>)
+kubectl exec -n openclaw deployment/openclaw -c main -- \
+  node dist/index.js pairing approve telegram <PAIRING_CODE>
+```
+
+Example: `kubectl exec -n openclaw deployment/openclaw -c main -- node dist/index.js pairing approve telegram PML9NL9U`
 
 ### kubectl Access Not Working
 
@@ -356,6 +407,7 @@ If issues persist:
 | List agents | `kubectl exec -n openclaw deployment/openclaw -- node dist/index.js agents list` |
 | List devices | `kubectl exec -n openclaw deployment/openclaw -- node dist/index.js devices list` |
 | Approve device | `kubectl exec -n openclaw deployment/openclaw -- node dist/index.js devices approve <id>` |
+| Pair Telegram | `kubectl exec -n openclaw deployment/openclaw -c main -- node dist/index.js pairing approve telegram <CODE>` |
 | Shell into pod | `kubectl exec -n openclaw deployment/openclaw -it -- sh` |
 | Check config | `kubectl exec -n openclaw deployment/openclaw -- cat /home/node/.openclaw/openclaw.json` |
 | Restart pod | `kubectl rollout restart deployment openclaw -n openclaw` |
