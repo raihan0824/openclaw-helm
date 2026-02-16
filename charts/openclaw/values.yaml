@@ -569,39 +569,39 @@ app-template:
             - path: /config
               readOnly: true
               
-    kubeconfig:
-      enabled: true
-      type: secret
-      name: openclaw-kubeconfig
-      advancedMounts:
-        main:
-          main:
-            - path: /home/node/.kube/config
-              subPath: config
-              readOnly: true
+    # kubeconfig:
+    #   enabled: true
+    #   type: secret
+    #   name: openclaw-kubeconfig
+    #   advancedMounts:
+    #     main:
+    #       main:
+    #         - path: /home/node/.kube/config
+    #           subPath: config
+    #           readOnly: true
 
 
-    aira-db-skill:
-      enabled: true
-      type: configMap
-      name: aira-db-skill
-      advancedMounts:
-        main:
-          main:
-            - path: /home/node/.openclaw/workspace/skills/aira-db/SKILL.md
-              subPath: SKILL.md
-              readOnly: true
+    # aira-db-skill:
+    #   enabled: true
+    #   type: configMap
+    #   name: aira-db-skill
+    #   advancedMounts:
+    #     main:
+    #       main:
+    #         - path: /home/node/.openclaw/workspace/skills/aira-db/SKILL.md
+    #           subPath: SKILL.md
+    #           readOnly: true
 
-    aira-db-mcporter-config:
-      enabled: true
-      type: configMap
-      name: aira-db-mcporter-config
-      advancedMounts:
-        main:
-          main:
-            - path: /home/node/.openclaw/workspace/config/mcporter.json
-              subPath: mcporter.json
-              readOnly: true
+    # aira-db-mcporter-config:
+    #   enabled: true
+    #   type: configMap
+    #   name: aira-db-mcporter-config
+    #   advancedMounts:
+    #     main:
+    #       main:
+    #         - path: /home/node/.openclaw/workspace/config/mcporter.json
+    #           subPath: mcporter.json
+    #           readOnly: true
 
     # Entire .openclaw directory as PVC
     data:
