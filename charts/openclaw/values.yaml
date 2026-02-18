@@ -498,14 +498,17 @@ app-template:
               "telegram": {
                 "botToken": "${TELEGRAM_BOT_TOKEN}",
                 "enabled": true
-              },
-              "slack": {
-                "botToken": "${SLACK_BOT_TOKEN}",
-                "appToken": "${SLACK_APP_TOKEN}",
-                "enabled": true,
-                "replyToMode": "all",
-                "channels": {"C0AEWJDTED6": { "allow": true, "requireMention": false }}
               }
+
+            // Uncomment if using Slack channel - make sure to have the secrets!!
+            //   "slack": {
+            //     "botToken": "${SLACK_BOT_TOKEN}",
+            //     "appToken": "${SLACK_APP_TOKEN}",
+            //     "enabled": true,
+            //     "replyToMode": "all",
+            //     "channels": {"C0AEWJDTED6": { "allow": true, "requireMention": false }}
+            //   }
+
             },
 
             // Hooks configuration
